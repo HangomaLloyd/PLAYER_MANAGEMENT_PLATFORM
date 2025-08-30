@@ -8,43 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 249 250 251;
-    --foreground: 31 41 55;
+    /* Football Association Color Scheme */
+    --background: 240 248 255;
+    --foreground: 15 23 42;
 
     --card: 0 0% 100%;
-    --card-foreground: 31 41 55;
+    --card-foreground: 15 23 42;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 31 41 55;
+    --popover-foreground: 15 23 42;
 
-    --primary: 14 165 233;
-    --primary-foreground: 248 250 252;
+    /* Field Green - Primary */
+    --primary: 120 60% 25%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 241 245 249;
-    --secondary-foreground: 51 65 85;
+    /* Trophy Gold - Secondary */
+    --secondary: 45 93% 58%;
+    --secondary-foreground: 15 23 42;
 
-    --muted: 248 250 252;
+    --muted: 210 40% 98%;
     --muted-foreground: 100 116 139;
 
-    --accent: 59 130 246;
-    --accent-foreground: 248 250 252;
+    /* Stadium Blue - Accent */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 34 197 94;
-    --success-foreground: 248 250 252;
+    /* Victory Green - Success */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 245 158 11;
-    --warning-foreground: 248 250 252;
+    /* Caution Yellow - Warning */
+    --warning: 54 91% 58%;
+    --warning-foreground: 15 23 42;
 
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 14 165 233;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 120 60% 25%;
 
-    --sidebar-bg: 15 23 42;
-    --sidebar-foreground: 203 213 225;
-    --sidebar-active: 14 165 233;
+    /* Sidebar Football Theme */
+    --sidebar-bg: 120 60% 15%;
+    --sidebar-foreground: 120 25% 85%;
+    --sidebar-active: 45 93% 58%;
 
     --radius: 0.75rem;
 
