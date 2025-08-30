@@ -5,7 +5,8 @@ import {
   Trophy, 
   FileText,
   Settings,
-  Goal
+  Goal,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,45 +25,72 @@ const menuItems = [
 
 export default function Sidebar({ activeItem = "dashboard" }: SidebarProps) {
   return (
-    <div className="w-64 bg-primary min-h-screen p-6 shadow-xl">
+    <div className="w-72 bg-gradient-to-b from-sidebar-background to-sidebar-background/95 min-h-screen p-6 shadow-2xl border-r border-sidebar-border/20 animate-slide-in">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-lg border-2 border-primary-foreground/20">
-            <Goal className="text-primary-foreground" size={24} />
+      <div className="mb-10">
+        <div className="flex items-center gap-4 mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20">
+          <div className="relative">
+            <div className="w-14 h-14 bg-gradient-to-br from-primary to-success rounded-2xl flex items-center justify-center shadow-xl animate-float">
+              <Shield className="text-white" size={28} />
+            </div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-secondary rounded-full animate-pulse"></div>
           </div>
           <div>
-            <h1 className="text-primary-foreground font-bold text-xl">FAZ Portal</h1>
-            <p className="text-primary-foreground/70 text-sm font-medium">Football Association</p>
+            <h1 className="text-sidebar-foreground font-bold text-2xl tracking-tight">FAZ Portal</h1>
+            <p className="text-sidebar-foreground/70 text-sm font-medium">Football Association of Zambia</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="space-y-2">
-        <div className="text-primary-foreground/60 text-xs font-semibold uppercase tracking-wider mb-4">
-          Main Menu
+      <nav className="space-y-3">
+        <div className="text-sidebar-foreground/50 text-xs font-bold uppercase tracking-[0.15em] mb-6 px-2">
+          Navigation
         </div>
-        {menuItems.map((item) => {
+        {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = activeItem === item.id;
           
           return (
-            <button
+            <div
               key={item.id}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-300",
-                isActive 
-                  ? "bg-secondary text-primary shadow-lg transform scale-105" 
-                  : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground hover:transform hover:translate-x-1"
-              )}
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <Icon size={20} />
-              <span className="font-medium">{item.label}</span>
-            </button>
+              <button
+                className={cn(
+                  "w-full flex items-center gap-4 px-5 py-4 rounded-xl text-left transition-all duration-300 group relative overflow-hidden",
+                  isActive 
+                    ? "bg-gradient-to-r from-primary to-success text-white shadow-2xl shadow-primary/25 transform scale-105" 
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-foreground/5 hover:text-sidebar-foreground hover:transform hover:translate-x-2"
+                )}
+              >
+                <div className={cn(
+                  "p-2 rounded-lg transition-all duration-300",
+                  isActive 
+                    ? "bg-white/20" 
+                    : "bg-sidebar-foreground/5 group-hover:bg-primary/10"
+                )}>
+                  <Icon size={20} />
+                </div>
+                <span className="font-semibold text-sm tracking-wide">{item.label}</span>
+                {isActive && (
+                  <div className="absolute right-0 top-0 bottom-0 w-1 bg-white rounded-l-full"></div>
+                )}
+              </button>
+            </div>
           );
         })}
       </nav>
+      
+      {/* Footer */}
+      <div className="mt-auto pt-8">
+        <div className="p-4 rounded-xl bg-gradient-to-r from-secondary/10 to-warning/10 border border-secondary/20">
+          <p className="text-sidebar-foreground/60 text-xs text-center font-medium">
+            © 2024 Football Association of Zambia
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

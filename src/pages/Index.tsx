@@ -1,89 +1,70 @@
-import { Users, UserCheck, Clock, Ban } from "lucide-react";
+import { Users, ArrowRightLeft, Trophy, AlertTriangle } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import StatsCard from "@/components/StatsCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RecentActivity from "@/components/RecentActivity";
 
-const Index = () => {
+export default function Index() {
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <Sidebar activeItem="dashboard" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-gray-50 flex">
+      <Sidebar />
       
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-card border-b px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Club Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage your club's players and operations</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search players..."
-                  className="pl-4 pr-4 py-2 border rounded-lg bg-background text-sm w-80"
-                />
-              </div>
-              <div className="w-8 h-8 bg-destructive rounded-full flex items-center justify-center">
-                <span className="text-destructive-foreground text-xs font-bold">1</span>
+      <main className="flex-1 p-8 overflow-auto">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-12 animate-fade-in">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-2 h-16 bg-gradient-to-b from-primary to-success rounded-full"></div>
+              <div>
+                <h1 className="text-5xl font-bold text-foreground mb-3 tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground text-lg font-medium">Welcome back, John. Here's what's happening with your club today.</p>
               </div>
             </div>
           </div>
-        </header>
 
-        {/* Dashboard Content */}
-        <main className="flex-1 p-8">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <StatsCard
               title="Total Players"
-              value="24"
-              subtitle="+ 1 this month"
+              value="156"
+              subtitle="12 new registrations this month"
               icon={Users}
               color="blue"
             />
             <StatsCard
-              title="Active Players"
-              value="22"
-              subtitle="91.7% active"
-              icon={UserCheck}
+              title="Active Transfers"
+              value="8"
+              subtitle="3 pending approval from FAZ"
+              icon={ArrowRightLeft}
               color="green"
             />
             <StatsCard
-              title="Pending Transfers"
-              value="5"
-              subtitle="3 outgoing"
-              icon={Clock}
+              title="Matches Played"
+              value="24"
+              subtitle="18 wins, 4 draws, 2 losses"
+              icon={Trophy}
               color="orange"
             />
             <StatsCard
-              title="Banned Players"
-              value="2"
-              subtitle="Under review"
-              icon={Ban}
+              title="Disciplinary Actions"
+              value="5"
+              subtitle="2 active bans under review"
+              icon={AlertTriangle}
               color="red"
             />
           </div>
 
-          {/* Content Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Player Roster - Takes 2 columns */}
-            <div className="xl:col-span-2">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2">
               <PlayerRoster />
             </div>
-            
-            {/* Recent Activity - Takes 1 column */}
-            <div>
+            <div className="space-y-8">
               <RecentActivity />
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
-};
-
-export default Index;
+}
