@@ -72,7 +72,7 @@ export default function Players() {
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
-              onClick={() => navigate('/players')}
+              onClick={() => navigate('/dashboard/players')} // Updated path
               className="text-primary hover:text-primary/80"
             >
               <ArrowLeft size={16} className="mr-2" />
@@ -245,7 +245,7 @@ export default function Players() {
                 <div 
                   key={player.id} 
                   className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/players/${player.id}`)}
+                  onClick={() => navigate(`/dashboard/players/${player.id}`)} // Updated path
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
@@ -279,7 +279,7 @@ export default function Players() {
                       className="text-primary hover:text-primary/80"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/players/${player.id}`);
+                        navigate(`/dashboard/players/${player.id}`); // Updated path
                       }}
                     >
                       <Eye size={14} className="mr-1" />
