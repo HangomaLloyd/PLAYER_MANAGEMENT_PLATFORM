@@ -46,30 +46,25 @@ const players = [
 
 export default function PlayerRoster() {
   return (
-    <div className="bg-card rounded-2xl shadow-2xl border border-gray-200/50 overflow-hidden animate-fade-in">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary/5 to-secondary/5 p-8 border-b border-gray-200/50">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-2">Player Roster</h2>
-            <p className="text-muted-foreground font-medium">Manage your team members</p>
-          </div>
-          <Button className="bg-gradient-to-r from-primary to-success hover:from-primary/90 hover:to-success/90 shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 text-sm font-semibold">
-            <Plus size={18} className="mr-2" />
-            Add New Player
+    <div className="bg-card rounded-lg shadow-sm border">
+      <div className="p-6 border-b">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-foreground">Player Roster</h2>
+          <Button className="bg-primary hover:bg-primary/90">
+            <Plus size={16} className="mr-2" />
+            Add Player
           </Button>
         </div>
         
-        {/* Search and Filters */}
-        <div className="flex items-center gap-6">
-          <div className="relative flex-1 max-w-md">
-            <Search size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
             <Input 
-              placeholder="Search players by name or NRC..." 
-              className="pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary transition-colors bg-white shadow-sm"
+              placeholder="Search players..." 
+              className="pl-10"
             />
           </div>
-          <select className="px-4 py-3 border-2 border-gray-200 rounded-xl text-sm bg-white shadow-sm focus:border-primary transition-colors font-medium">
+          <select className="px-3 py-2 border rounded-lg text-sm bg-background">
             <option>All Status</option>
             <option>Active</option>
             <option>Banned</option>
@@ -78,71 +73,53 @@ export default function PlayerRoster() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50/50 border-b-2 border-gray-200/50">
-              <TableHead className="font-bold text-foreground py-4 px-6">Player</TableHead>
-              <TableHead className="font-bold text-foreground py-4">NRC</TableHead>
-              <TableHead className="font-bold text-foreground py-4">Position</TableHead>
-              <TableHead className="font-bold text-foreground py-4">Status</TableHead>
-              <TableHead className="font-bold text-foreground py-4">Joined</TableHead>
-              <TableHead className="font-bold text-foreground py-4">Actions</TableHead>
+            <TableRow>
+              <TableHead>Player</TableHead>
+              <TableHead>NRC</TableHead>
+              <TableHead>Position</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {players.map((player, index) => (
-              <TableRow 
-                key={player.id} 
-                className="hover:bg-gray-50/50 transition-colors duration-200 border-b border-gray-100 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <TableCell className="py-5 px-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center shadow-md border-2 border-white">
-                        <span className="text-sm font-bold text-primary">
-                          {player.name.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                        player.status === 'Active' ? 'bg-success' : 'bg-destructive'
-                      }`}></div>
+            {players.map((player) => (
+              <TableRow key={player.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-sm font-medium text-gray-600">
+                        {player.name.split(' ').map(n => n[0]).join('')}
+                      </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground text-base">{player.name}</p>
-                      <p className="text-sm text-muted-foreground font-medium">Age: {player.age}</p>
+                      <p className="font-medium text-foreground">{player.name}</p>
+                      <p className="text-sm text-muted-foreground">Age: {player.age}</p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground font-mono text-sm">{player.nrc}</TableCell>
-                <TableCell>
-                  <span className="px-3 py-1 rounded-full bg-accent/10 text-accent font-medium text-sm">
-                    {player.position}
-                  </span>
-                </TableCell>
+                <TableCell className="text-muted-foreground">{player.nrc}</TableCell>
+                <TableCell className="text-muted-foreground">{player.position}</TableCell>
                 <TableCell>
                   <Badge 
                     variant={player.status === 'Active' ? 'default' : 'destructive'}
-                    className={`${
-                      player.status === 'Active' 
-                        ? 'bg-success hover:bg-success/90 text-success-foreground shadow-md' 
-                        : 'shadow-md'
-                    } px-3 py-1 font-semibold`}
+                    className={player.status === 'Active' ? 'bg-success text-success-foreground' : ''}
                   >
                     {player.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-muted-foreground font-medium">{player.joined}</TableCell>
+                <TableCell className="text-muted-foreground">{player.joined}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="text-accent hover:text-accent/80 hover:bg-accent/10 transition-colors">
-                      <Eye size={16} className="mr-1" />
+                    <Button variant="ghost" size="sm" className="text-primary">
+                      <Eye size={14} className="mr-1" />
                       View
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/10 transition-colors">
-                      <Edit size={16} className="mr-1" />
+                    <Button variant="ghost" size="sm" className="text-primary">
+                      <Edit size={14} className="mr-1" />
                       Edit
                     </Button>
                   </div>
@@ -153,17 +130,14 @@ export default function PlayerRoster() {
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="p-6 border-t border-gray-200/50 bg-gray-50/30">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground font-medium">
-            Showing <span className="font-semibold text-foreground">1 to 3</span> of <span className="font-semibold text-foreground">24</span> results
-          </p>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="border-2 hover:border-primary hover:bg-primary/5">Previous</Button>
-            <Button variant="default" size="sm" className="bg-primary hover:bg-primary/90 shadow-md">1</Button>
-            <Button variant="outline" size="sm" className="border-2 hover:border-primary hover:bg-primary/5">2</Button>
-            <Button variant="outline" size="sm" className="border-2 hover:border-primary hover:bg-primary/5">Next</Button>
+      <div className="p-4 border-t">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>Showing 1 to 3 of 24 results</span>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">Previous</Button>
+            <Button variant="default" size="sm" className="bg-primary">1</Button>
+            <Button variant="outline" size="sm">2</Button>
+            <Button variant="outline" size="sm">Next</Button>
           </div>
         </div>
       </div>

@@ -8,61 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Zambian FAZ Color Scheme - Professional Base */
-    --background: 248 250 252;
-    --foreground: 30 41 59;
+    /* Football Association Color Scheme */
+    --background: 240 248 255;
+    --foreground: 15 23 42;
 
-    --card: 255 255 255;
-    --card-foreground: 30 41 59;
+    --card: 0 0% 100%;
+    --card-foreground: 15 23 42;
 
-    --popover: 255 255 255;
-    --popover-foreground: 30 41 59;
+    --popover: 0 0% 100%;
+    --popover-foreground: 15 23 42;
 
-    /* Zambian Green - Primary */
-    --primary: 140 69% 22%;
-    --primary-foreground: 255 255 255;
+    /* Field Green - Primary */
+    --primary: 120 60% 25%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Zambian Orange - Secondary */
-    --secondary: 25 95% 53%;
-    --secondary-foreground: 255 255 255;
+    /* Trophy Gold - Secondary */
+    --secondary: 45 93% 58%;
+    --secondary-foreground: 15 23 42;
 
-    --muted: 241 245 249;
+    --muted: 210 40% 98%;
     --muted-foreground: 100 116 139;
 
-    /* Professional Blue - Accent */
-    --accent: 214 88% 27%;
-    --accent-foreground: 255 255 255;
+    /* Stadium Blue - Accent */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Zambian Red - Destructive */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 255 255 255;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Success Green */
-    --success: 142 76% 36%;
-    --success-foreground: 255 255 255;
+    /* Victory Green - Success */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
-    /* Warning Orange */
-    --warning: 38 92% 50%;
-    --warning-foreground: 30 41 59;
+    /* Caution Yellow - Warning */
+    --warning: 54 91% 58%;
+    --warning-foreground: 15 23 42;
 
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 140 69% 22%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 120 60% 25%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(140 69% 22%), hsl(142 76% 36%));
-    --gradient-secondary: linear-gradient(135deg, hsl(25 95% 53%), hsl(38 92% 50%));
-    --gradient-accent: linear-gradient(135deg, hsl(214 88% 27%), hsl(217 91% 60%));
-
-    /* Sidebar */
-    --sidebar-background: 30 41 59;
-    --sidebar-foreground: 226 232 240;
-    --sidebar-primary: 140 69% 22%;
-    --sidebar-primary-foreground: 255 255 255;
-    --sidebar-accent: 25 95% 53%;
-    --sidebar-accent-foreground: 255 255 255;
-    --sidebar-border: 51 65 85;
-    --sidebar-ring: 140 69% 22%;
+    /* Sidebar Football Theme */
+    --sidebar-bg: 120 60% 15%;
+    --sidebar-foreground: 120 25% 85%;
+    --sidebar-active: 45 93% 58%;
 
     --radius: 0.75rem;
 
