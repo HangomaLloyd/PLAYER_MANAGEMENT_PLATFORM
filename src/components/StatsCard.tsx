@@ -9,7 +9,7 @@ interface StatsCardProps {
 }
 
 const colorVariants = {
-  blue: "text-accent bg-accent/10 border border-accent/20",
+  blue: "text-primary bg-primary/10 border border-primary/20",
   green: "text-success bg-success/10 border border-success/20",
   orange: "text-warning bg-warning/10 border border-warning/20",
   red: "text-destructive bg-destructive/10 border border-destructive/20",
@@ -17,7 +17,7 @@ const colorVariants = {
 
 export default function StatsCard({ title, value, subtitle, icon: Icon, color }: StatsCardProps) {
   return (
-    <div className="bg-card rounded-xl p-6 shadow-lg border border-primary/10 hover:shadow-xl transition-all duration-300 hover:transform hover:-translate-y-1">
+    <div className="bg-card rounded-xl p-6 shadow-lg border hover:shadow-xl transition-all duration-300 hover:transform hover:-translate-y-1">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-muted-foreground text-sm font-medium mb-1">{title}</p>

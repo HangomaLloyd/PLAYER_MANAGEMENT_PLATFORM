@@ -2,6 +2,7 @@ import { Search, Plus, Eye, Edit, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -45,6 +46,8 @@ const players = [
 ];
 
 export default function PlayerRoster() {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-card rounded-lg shadow-sm border">
       <div className="p-6 border-b">
@@ -96,7 +99,12 @@ export default function PlayerRoster() {
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{player.name}</p>
+                      <p 
+                        className="font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                        onClick={() => navigate(`/players/${player.id}`)}
+                      >
+                        {player.name}
+                      </p>
                       <p className="text-sm text-muted-foreground">Age: {player.age}</p>
                     </div>
                   </div>
@@ -114,11 +122,16 @@ export default function PlayerRoster() {
                 <TableCell className="text-muted-foreground">{player.joined}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="text-primary">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-primary hover:text-primary/80"
+                      onClick={() => navigate(`/players/${player.id}`)}
+                    >
                       <Eye size={14} className="mr-1" />
                       View
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-primary">
+                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
                       <Edit size={14} className="mr-1" />
                       Edit
                     </Button>

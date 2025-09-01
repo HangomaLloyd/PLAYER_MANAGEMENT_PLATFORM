@@ -1,17 +1,11 @@
 import { Users, UserCheck, Clock, Ban } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
 import StatsCard from "@/components/StatsCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RecentActivity from "@/components/RecentActivity";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <Sidebar activeItem="dashboard" />
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-card border-b px-8 py-6">
           <div className="flex items-center justify-between">
@@ -81,7 +75,6 @@ const Index = () => {
             </div>
           </div>
         </main>
-      </div>
     </div>
   );
 };
