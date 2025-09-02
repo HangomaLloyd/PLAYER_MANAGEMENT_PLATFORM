@@ -23,6 +23,19 @@ export default function Players() {
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
+  // Add player state
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addForm, setAddForm] = useState<any>({});
+  const [addFile, setAddFile] = useState<File | null>(null);
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
+  // Handle file input change for avatar
+  const handleAddFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAddFile(e.target.files[0]);
+    }
+  };
+
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
@@ -88,6 +101,49 @@ export default function Players() {
       setEditError(err.message || "Update failed.");
     }
     setEditLoading(false);
+  };
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("jwt");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  // Handle add form changes
+  const handleAddFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAddForm({ ...addForm, [e.target.name]: e.target.value });
+  };
+
+  // Submit new player
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddLoading(true);
+    setAddError("");
+    try {
+      const formData = new FormData();
+      Object.entries(addForm).forEach(([key, value]) => {
+        formData.append(key, value as string);
+      });
+      if (addFile) {
+        formData.append("avatar", addFile);
+      }
+      const res = await fetch(`${API_BASE_URL}/players`, {
+        method: "POST",
+        headers: {
+          ...getAuthHeaders(), // Do NOT set Content-Type, browser will set it for FormData
+        },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Failed to add player.");
+      setAddModalOpen(false);
+      setAddForm({});
+      setAddFile(null);
+      // Optionally, refetch players
+      const updatedRes = await fetch(`${API_BASE_URL}/players`);
+      setPlayers(await updatedRes.json());
+    } catch (err: any) {
+      setAddError(err.message || "Add failed.");
+    }
+    setAddLoading(false);
   };
 
   if (selectedPlayer) {
@@ -228,7 +284,7 @@ export default function Players() {
             <h1 className="text-2xl font-bold text-foreground">Player Management</h1>
             <p className="text-muted-foreground mt-1">Manage all registered players in the FAZ system</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddModalOpen(true)}>
             <Plus size={16} className="mr-2" />
             Register New Player
           </Button>
@@ -333,6 +389,32 @@ export default function Players() {
                 <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)}>Cancel</Button>
               </div>
               {editError && <div className="text-red-500 text-sm">{editError}</div>}
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Player Modal */}
+      {addModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Register New Player</h2>
+            <form onSubmit={handleAddSubmit} className="space-y-4" encType="multipart/form-data">
+              <Input name="name" value={addForm.name || ""} onChange={handleAddFormChange} placeholder="Name" />
+              <Input name="age" value={addForm.age || ""} onChange={handleAddFormChange} placeholder="Age" type="number" />
+              <Input name="nrc" value={addForm.nrc || ""} onChange={handleAddFormChange} placeholder="NRC" />
+              <Input name="position" value={addForm.position || ""} onChange={handleAddFormChange} placeholder="Position" />
+              <Input name="club" value={addForm.club || ""} onChange={handleAddFormChange} placeholder="Club" />
+              <Input name="nationality" value={addForm.nationality || ""} onChange={handleAddFormChange} placeholder="Nationality" />
+              <Input name="phone" value={addForm.phone || ""} onChange={handleAddFormChange} placeholder="Phone" />
+              <Input name="email" value={addForm.email || ""} onChange={handleAddFormChange} placeholder="Email" />
+              <Input name="joined" value={addForm.joined || ""} onChange={handleAddFormChange} placeholder="Date Joined" type="date" />
+              <Input type="file" name="avatar" accept="image/*" onChange={handleAddFileChange} />
+              <div className="flex gap-2">
+                <Button type="submit" disabled={addLoading} className="bg-primary text-white">{addLoading ? "Saving..." : "Save"}</Button>
+                <Button type="button" variant="outline" onClick={() => setAddModalOpen(false)}>Cancel</Button>
+              </div>
+              {addError && <div className="text-red-500 text-sm">{addError}</div>}
             </form>
           </div>
         </div>

@@ -2,6 +2,20 @@ import express from 'express';
 import Player from '../models/Player.js';
 import { verifyToken } from '../middleware/authMiddleware.js';
 
+import multer from 'multer';
+import path from 'path';
+
+// Set up multer storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(process.cwd(), 'public', 'lovable-uploads'));
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const upload = multer({ storage });
+
 const router = express.Router();
 
 // Get all players
@@ -15,14 +29,25 @@ router.get('/', async (req, res) => {
 });
 
 // Create a player (admin only)
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', verifyToken, upload.single('avatar'), async (req, res) => {
   // You should check req.user.role === 'admin' in a real app
   try {
-    const player = new Player({ ...req.body, createdBy: req.user.userId });
+    console.log('Add player request body:', req.body);
+    let avatarPath = '';
+    if (req.file) {
+      avatarPath = `/lovable-uploads/${req.file.filename}`;
+    }
+    // Set createdBy from authenticated user (req.user._id)
+    const player = new Player({
+      ...req.body,
+      avatar: avatarPath,
+      createdBy: req.user._id
+    });
     await player.save();
     res.status(201).json(player);
   } catch (err) {
-    res.status(400).json({ message: 'Failed to create player.' });
+    console.error('Add player error:', err);
+    res.status(400).json({ message: 'Failed to create player.', error: err.message });
   }
 });
 
