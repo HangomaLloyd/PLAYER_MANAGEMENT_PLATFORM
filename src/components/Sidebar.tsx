@@ -8,10 +8,11 @@ import {
   Settings,
   Goal,
   Sun,
-  Moon
+  Moon,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 // The paths have been updated to include '/dashboard' to match the new routing in App.tsx
 const menuItems = [
@@ -25,6 +26,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Load theme preference from local storage on initial render
@@ -49,6 +51,11 @@ export default function Sidebar() {
     } else {
       document.documentElement.classList.remove("dark");
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+    navigate("/auth");
   };
 
   return (
@@ -97,16 +104,25 @@ export default function Sidebar() {
         </nav>
       </div>
       
-      {/* Theme Toggle Button */}
-      <div className="mt-8 pt-4 border-t border-sidebar-foreground/10">
+      {/* Footer with Theme Toggle and Logout */}
+      <div className="mt-8 pt-4 border-t border-sidebar-foreground/10 space-y-2">
+        {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-300"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-300"
         >
           {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           <span className="font-medium">
             {isDarkMode ? "Light Mode" : "Dark Mode"}
           </span>
+        </button>
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-500/10 transition-all duration-300"
+        >
+          <LogOut size={20} />
+          <span className="font-medium">Logout</span>
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, Eye, Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,63 +6,89 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate, useParams } from "react-router-dom";
 
-const players = [
-  {
-    id: 1,
-    name: "Moses Banda",
-    age: 24,
-    nrc: "123456789/1",
-    position: "Forward",
-    status: "Active",
-    joined: "Jan 15, 2024",
-    club: "Zanaco FC",
-    nationality: "Zambian",
-    phone: "+260 97 123 4567",
-    email: "moses.banda@email.com",
-    avatar: "/lovable-uploads/5c3ad949-b867-4e22-9eb2-abae8057b624.png"
-  },
-  {
-    id: 2,
-    name: "Patrick Mulenga",
-    age: 27,
-    nrc: "234567891/1",
-    position: "Midfielder",
-    status: "Banned",
-    joined: "Mar 10, 2023",
-    club: "Green Eagles FC",
-    nationality: "Zambian",
-    phone: "+260 97 234 5678",
-    email: "patrick.mulenga@email.com",
-    avatar: "/lovable-uploads/5c3ad949-b867-4e22-9eb2-abae8057b624.png"
-  },
-  {
-    id: 3,
-    name: "Kennedy Musonda",
-    age: 22,
-    nrc: "345678911/1",
-    position: "Defender",
-    status: "Active",
-    joined: "Aug 5, 2024",
-    club: "Power Dynamos FC",
-    nationality: "Zambian",
-    phone: "+260 97 345 6789",
-    email: "kennedy.musonda@email.com",
-    avatar: "/lovable-uploads/5c3ad949-b867-4e22-9eb2-abae8057b624.png"
-  },
-];
+const API_BASE_URL = "/api";
 
 export default function Players() {
   const navigate = useNavigate();
   const { playerId } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
+  const [players, setPlayers] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
-  const selectedPlayer = playerId ? players.find(p => p.id === parseInt(playerId)) : null;
+  // Edit player state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editPlayer, setEditPlayer] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/players`);
+        const data = await res.json();
+        setPlayers(data);
+      } catch (err) {
+        setError("Failed to fetch players.");
+      }
+      setLoading(false);
+    };
+    fetchPlayers();
+  }, []);
+
+  const selectedPlayer = playerId ? players.find(p => p._id === playerId) : null;
 
   const filteredPlayers = players.filter(player =>
     player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     player.nrc.includes(searchTerm) ||
     player.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return <div className="p-8">Loading players...</div>;
+  }
+  if (error) {
+    return <div className="p-8 text-red-500">{error}</div>;
+  }
+
+  // Open modal and set form data
+  const handleEditClick = (player: any) => {
+    setEditPlayer(player);
+    setEditForm({ ...player });
+    setEditModalOpen(true);
+    setEditError("");
+  };
+
+  // Handle form changes
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  // Submit update
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/players/${editPlayer._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (!res.ok) throw new Error("Failed to update player.");
+      // Refresh player list/profile
+      setEditModalOpen(false);
+      setEditPlayer(null);
+      setEditForm({});
+      // Optionally, refetch players
+      const updatedRes = await fetch(`${API_BASE_URL}/players`);
+      setPlayers(await updatedRes.json());
+    } catch (err: any) {
+      setEditError(err.message || "Update failed.");
+    }
+    setEditLoading(false);
+  };
 
   if (selectedPlayer) {
     return (
@@ -126,10 +152,7 @@ export default function Players() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Details Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Personal Information */}
               <Card>
                 <CardHeader>
                   <CardTitle>Personal Information</CardTitle>
@@ -153,12 +176,10 @@ export default function Players() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Date Joined</label>
-                    <p className="text-foreground font-medium">{selectedPlayer.joined}</p>
+                    <p className="text-foreground font-medium">{new Date(selectedPlayer.joined).toLocaleDateString()}</p>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Career History */}
               <Card>
                 <CardHeader>
                   <CardTitle>Career History</CardTitle>
@@ -167,7 +188,7 @@ export default function Players() {
                   <div className="space-y-4">
                     <div className="border-l-2 border-primary pl-4">
                       <h4 className="font-semibold text-foreground">{selectedPlayer.club}</h4>
-                      <p className="text-sm text-muted-foreground">Current Club • {selectedPlayer.joined} - Present</p>
+                      <p className="text-sm text-muted-foreground">Current Club • {new Date(selectedPlayer.joined).toLocaleDateString()} - Present</p>
                       <p className="text-sm text-muted-foreground">Position: {selectedPlayer.position}</p>
                     </div>
                   </div>
@@ -179,7 +200,7 @@ export default function Players() {
             <Card>
               <CardContent className="p-6">
                 <div className="flex gap-4">
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button className="bg-primary hover:bg-primary/90" onClick={() => handleEditClick(selectedPlayer)}>
                     <Edit size={16} className="mr-2" />
                     Edit Profile
                   </Button>
@@ -243,9 +264,9 @@ export default function Players() {
             <div className="space-y-4">
               {filteredPlayers.map((player) => (
                 <div 
-                  key={player.id} 
+                  key={player._id} 
                   className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/dashboard/players/${player.id}`)} // Updated path
+                  onClick={() => navigate(`/dashboard/players/${player._id}`)} // Updated path
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
@@ -279,7 +300,7 @@ export default function Players() {
                       className="text-primary hover:text-primary/80"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/dashboard/players/${player.id}`); // Updated path
+                        navigate(`/dashboard/players/${player._id}`); // Updated path
                       }}
                     >
                       <Eye size={14} className="mr-1" />
@@ -292,6 +313,30 @@ export default function Players() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Edit Player Modal */}
+      {editModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Edit Player</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <Input name="name" value={editForm.name || ""} onChange={handleEditFormChange} placeholder="Name" />
+              <Input name="age" value={editForm.age || ""} onChange={handleEditFormChange} placeholder="Age" type="number" />
+              <Input name="nrc" value={editForm.nrc || ""} onChange={handleEditFormChange} placeholder="NRC" />
+              <Input name="position" value={editForm.position || ""} onChange={handleEditFormChange} placeholder="Position" />
+              <Input name="club" value={editForm.club || ""} onChange={handleEditFormChange} placeholder="Club" />
+              <Input name="nationality" value={editForm.nationality || ""} onChange={handleEditFormChange} placeholder="Nationality" />
+              <Input name="phone" value={editForm.phone || ""} onChange={handleEditFormChange} placeholder="Phone" />
+              <Input name="email" value={editForm.email || ""} onChange={handleEditFormChange} placeholder="Email" />
+              <div className="flex gap-2">
+                <Button type="submit" disabled={editLoading} className="bg-primary text-white">{editLoading ? "Saving..." : "Save"}</Button>
+                <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)}>Cancel</Button>
+              </div>
+              {editError && <div className="text-red-500 text-sm">{editError}</div>}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

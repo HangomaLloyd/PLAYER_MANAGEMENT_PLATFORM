@@ -1,4 +1,5 @@
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { verify } = jwt;
 
 // A secret key for signing JWTs. In production, this should be
 // an environment variable, not hardcoded.

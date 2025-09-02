@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 // This is our in-memory "database" for demonstration purposes.
 // In a real application, you would replace this with a database model.
@@ -10,7 +10,7 @@ const users = [];
 const JWT_SECRET = 'your-very-secure-and-long-secret-key';
 
 // Handle user registration
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   const { email, password } = req.body;
 
   // Check if user already exists
@@ -38,7 +38,7 @@ exports.signup = async (req, res) => {
 };
 
 // Handle user login
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   const { email, password } = req.body;
 
   // Find the user by email

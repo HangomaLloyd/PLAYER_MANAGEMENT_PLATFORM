@@ -1,6 +1,9 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import connectDB from './db.js'; // Import the database connection function
+import connectDB from './db.js';
+import authRoutes from './routes/authRoutes.js';
+import playerRoutes from './routes/playerRoutes.js';
+import matchRoutes from './routes/matchRoutes.js';
 
 // Load environment variables from a .env file
 dotenv.config();
@@ -10,6 +13,11 @@ const app = express();
 
 // Middleware to parse JSON bodies from incoming requests
 app.use(express.json());
+
+// Use authentication routes
+app.use('/api/auth', authRoutes);
+app.use('/api/players', playerRoutes);
+app.use('/api/matches', matchRoutes);
 
 // Connect to the database
 connectDB();

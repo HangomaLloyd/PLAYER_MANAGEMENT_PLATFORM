@@ -1,6 +1,6 @@
-const express = require('express');
-const { signup, login } = require('../controllers/authController');
-const { verifyToken } = require('../middleware/authMiddleware');
+import express from 'express';
+import { signup, login } from '../controllers/authController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -16,4 +16,4 @@ router.get('/protected', verifyToken, (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
