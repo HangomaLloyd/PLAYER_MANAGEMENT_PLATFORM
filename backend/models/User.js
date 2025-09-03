@@ -3,7 +3,14 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  // Add more fields as needed (e.g., name, role)
+  clubName: { type: String },
+  adminName: { type: String },
+  adminRole: { type: String },
+  phoneNumber: { type: String },
+  province: { type: String },
+  clubDivision: { type: String },
+  registrationDoc: { type: String },
+  logo: { type: String },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

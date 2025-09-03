@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getClubInfoFromToken } from "@/lib/auth";
 import { 
   LayoutDashboard, 
   Users, 
@@ -25,9 +26,15 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [clubInfo, setClubInfo] = useState(null);
+
+  useEffect(() => {
+    setClubInfo(getClubInfoFromToken());
+  }, []);
 
   // Load theme preference from local storage on initial render
   useEffect(() => {
@@ -61,15 +68,27 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-sidebar-background min-h-screen p-6 shadow-xl flex flex-col justify-between">
       <div>
-        {/* Header */}
+        {/* Header with club info */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-sidebar-primary rounded-full flex items-center justify-center shadow-lg">
-              <Goal className="text-sidebar-primary-foreground" size={24} />
-            </div>
+            {clubInfo?.logo ? (
+              <img
+                src={"/lovable-uploads/" + clubInfo.logo}
+                alt="Club Logo"
+                className="w-12 h-12 rounded-full object-cover border-2 border-sidebar-primary shadow-lg"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-sidebar-primary rounded-full flex items-center justify-center shadow-lg">
+                <Goal className="text-sidebar-primary-foreground" size={24} />
+              </div>
+            )}
             <div>
-              <h1 className="text-sidebar-foreground font-bold text-xl">FAZ Portal</h1>
-              <p className="text-sidebar-foreground/70 text-sm font-medium">Football Association</p>
+              <h1 className="text-sidebar-foreground font-bold text-xl">
+                {clubInfo?.clubName || "FAZ Portal"}
+              </h1>
+              <p className="text-sidebar-foreground/70 text-sm font-medium">
+                {clubInfo?.adminName ? `Admin: ${clubInfo.adminName}` : "Football Association"}
+              </p>
             </div>
           </div>
         </div>

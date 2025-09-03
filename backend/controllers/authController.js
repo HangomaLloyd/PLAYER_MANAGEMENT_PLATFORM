@@ -10,7 +10,11 @@ const JWT_SECRET = 'your-very-secure-and-long-secret-key';
 
 // Handle user registration
 export const signup = async (req, res) => {
-  const { email, password } = req.body;
+  // For multipart/form-data, fields are in req.body, files in req.files
+  const { email, password, clubName, adminName, adminRole, phoneNumber, province, clubDivision } = req.body;
+  // File uploads
+  const registrationDoc = req.files?.registrationDoc?.[0]?.filename || null;
+  const logo = req.files?.logo?.[0]?.filename || null;
 
   try {
     // Check if user already exists
@@ -22,12 +26,30 @@ export const signup = async (req, res) => {
     // Hash the password for security
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user document
-    const newUser = new User({ email, password: hashedPassword });
+    // Create a new user document (add more fields as needed)
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+      clubName,
+      adminName,
+      adminRole,
+      phoneNumber,
+      province,
+      clubDivision,
+      registrationDoc,
+      logo
+    });
     await newUser.save();
 
-    // Generate a JWT token
-    const token = jwt.sign({ userId: newUser._id, email: newUser.email }, JWT_SECRET, { expiresIn: '1h' });
+
+    // Generate a JWT token with club info for dashboard display
+    const token = jwt.sign({
+      userId: newUser._id,
+      email: newUser.email,
+      clubName: newUser.clubName,
+      adminName: newUser.adminName,
+      logo: newUser.logo
+    }, JWT_SECRET, { expiresIn: '1h' });
 
     console.log(`New user signed up: ${email}`);
     res.status(201).json({ message: 'User registered successfully.', token });
@@ -53,8 +75,15 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-    // Generate a JWT token
-    const token = jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+
+    // Generate a JWT token with club info for dashboard display
+    const token = jwt.sign({
+      userId: user._id,
+      email: user.email,
+      clubName: user.clubName,
+      adminName: user.adminName,
+      logo: user.logo
+    }, JWT_SECRET, { expiresIn: '1h' });
 
     console.log(`User logged in: ${email}`);
     res.json({ message: 'Login successful.', token });

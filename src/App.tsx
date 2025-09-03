@@ -3,8 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Layout from "./components/Layout";
-import LandingPage from "./pages/LandingPage.tsx"; // Import the new LandingPage with .tsx extension
+import LandingPage from "./pages/LandingPage.tsx";
 import Index from "./pages/Index";
 import Players from "./pages/Players";
 import Transfers from "./pages/Transfers";
@@ -13,6 +14,13 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage.tsx";
+// Super Admin imports
+import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
+import SuperAdminOverview from "./pages/superadmin/SuperAdminOverview";
+import ClubsManagement from "./pages/superadmin/ClubsManagement";
+import PlayersManagement from "./pages/superadmin/PlayersManagement";
+import TransfersBans from "./pages/superadmin/TransfersBans";
+import FixturesMatches from "./pages/superadmin/FixturesMatches";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +46,14 @@ const App = () => (
             <Route path="matches" element={<Matches />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
+          </Route>
+          {/* Super Admin dashboard routes */}
+          <Route path="/superadmin" element={<SuperAdminLayout />}>
+            <Route index element={<SuperAdminOverview />} />
+            <Route path="clubs" element={<ClubsManagement />} />
+            <Route path="players" element={<PlayersManagement />} />
+            <Route path="transfers-bans" element={<TransfersBans />} />
+            <Route path="fixtures" element={<FixturesMatches />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

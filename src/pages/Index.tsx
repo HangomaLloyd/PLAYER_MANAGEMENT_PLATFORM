@@ -1,17 +1,26 @@
+
 import { Users, UserCheck, Clock, Ban } from "lucide-react";
 import StatsCard from "@/components/StatsCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RecentActivity from "@/components/RecentActivity";
+import { getClubInfoFromToken } from "@/lib/auth";
 
 const Index = () => {
+  const clubInfo = getClubInfoFromToken();
   return (
     <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="bg-card border-b px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Club Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage your club's players and operations</p>
+              <h1 className="text-2xl font-bold text-foreground">
+                {clubInfo?.clubName || "Club Dashboard"}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {clubInfo?.adminName
+                  ? `Admin: ${clubInfo.adminName}`
+                  : "Manage your club's players and operations"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative">
