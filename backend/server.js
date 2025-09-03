@@ -14,10 +14,15 @@ const app = express();
 // Middleware to parse JSON bodies from incoming requests
 app.use(express.json());
 
+// Serve static files for uploaded images
+app.use('/lovable-uploads', express.static('public/lovable-uploads'));
+
 // Use authentication routes
 app.use('/api/auth', authRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/matches', matchRoutes);
+import transferRoutes from './routes/transferRoutes.js';
+app.use('/api/transfers', transferRoutes);
 
 // Connect to the database
 connectDB();

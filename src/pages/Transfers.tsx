@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus, Clock, CheckCircle, XCircle, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,94 +7,103 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
-const transfers = [
-  {
-    id: 1,
-    playerName: "Moses Banda",
-    playerNRC: "123456789/1",
-    fromClub: "Zanaco FC",
-    toClub: "Green Eagles FC",
-    status: "Pending",
-    requestDate: "2024-01-15",
-    amount: "K50,000",
-    type: "Permanent"
-  },
-  {
-    id: 2,
-    playerName: "John Phiri",
-    playerNRC: "987654321/1",
-    fromClub: "Power Dynamos FC",
-    toClub: "Nkana FC",
-    status: "Approved",
-    requestDate: "2024-01-10",
-    amount: "K75,000",
-    type: "Permanent"
-  },
-  {
-    id: 3,
-    playerName: "David Sakala",
-    playerNRC: "456789123/1",
-    fromClub: "Red Arrows FC",
-    toClub: "Zanaco FC",
-    status: "Rejected",
-    requestDate: "2024-01-08",
-    amount: "K30,000",
-    type: "Loan"
-  }
-];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Approved':
-      return 'bg-success text-success-foreground';
-    case 'Rejected':
-      return 'bg-destructive text-destructive-foreground';
-    case 'Pending':
-      return 'bg-warning text-warning-foreground';
-    default:
-      return 'bg-muted text-muted-foreground';
-  }
-};
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'Approved':
-      return <CheckCircle size={16} />;
-    case 'Rejected':
-      return <XCircle size={16} />;
-    case 'Pending':
-      return <Clock size={16} />;
-    default:
-      return <Clock size={16} />;
-  }
-};
+const API_BASE_URL = "/api";
 
 export default function Transfers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [transfers, setTransfers] = useState<any[]>([]);
+  const [players, setPlayers] = useState<any[]>([]);
   const [newTransfer, setNewTransfer] = useState({
-    playerNRC: "",
+    playerId: "",
     toClub: "",
     amount: "",
     type: "Permanent"
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredTransfers = transfers.filter(transfer =>
-    transfer.playerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transfer.playerNRC.includes(searchTerm) ||
-    transfer.fromClub.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transfer.toClub.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [transfersRes, playersRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/transfers`),
+          fetch(`${API_BASE_URL}/players`)
+        ]);
+        const transfersData = await transfersRes.json();
+        const playersData = await playersRes.json();
+        setTransfers(transfersData);
+        setPlayers(playersData);
+      } catch (err) {
+        setError("Failed to fetch transfers or players.");
+      }
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
-  const handleSubmitTransfer = () => {
-    // Handle transfer submission logic here
-    setIsDialogOpen(false);
-    setNewTransfer({
-      playerNRC: "",
-      toClub: "",
-      amount: "",
-      type: "Permanent"
-    });
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Approved':
+        return 'bg-success text-success-foreground';
+      case 'Rejected':
+        return 'bg-destructive text-destructive-foreground';
+      case 'Pending':
+        return 'bg-warning text-warning-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Approved':
+        return <CheckCircle size={16} />;
+      case 'Rejected':
+        return <XCircle size={16} />;
+      case 'Pending':
+        return <Clock size={16} />;
+      default:
+        return <Clock size={16} />;
+    }
+  };
+
+  const filteredTransfers = transfers.filter(transfer => {
+    const player = transfer.player || {};
+    return (
+      (player.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.nrc || "").includes(searchTerm) ||
+      (transfer.fromClub || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (transfer.toClub || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const handleSubmitTransfer = async () => {
+    try {
+      const player = players.find(p => p._id === newTransfer.playerId);
+      if (!player) throw new Error("Player not found");
+      const res = await fetch(`${API_BASE_URL}/transfers`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`
+        },
+        body: JSON.stringify({
+          playerId: newTransfer.playerId,
+          fromClub: player.club,
+          toClub: newTransfer.toClub,
+          amount: newTransfer.amount,
+          type: newTransfer.type
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create transfer");
+      const created = await res.json();
+      setTransfers([created, ...transfers]);
+      setIsDialogOpen(false);
+      setNewTransfer({ playerId: "", toClub: "", amount: "", type: "Permanent" });
+    } catch (err) {
+      setError((err as Error).message || "Failed to create transfer");
+    }
   };
 
   return (
@@ -119,13 +128,20 @@ export default function Transfers() {
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="playerNRC">Player NRC</Label>
-                  <Input
-                    id="playerNRC"
-                    placeholder="Enter player's NRC number"
-                    value={newTransfer.playerNRC}
-                    onChange={(e) => setNewTransfer({...newTransfer, playerNRC: e.target.value})}
-                  />
+                  <Label htmlFor="playerId">Player</Label>
+                  <select
+                    id="playerId"
+                    className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
+                    value={newTransfer.playerId}
+                    onChange={e => setNewTransfer({ ...newTransfer, playerId: e.target.value })}
+                  >
+                    <option value="">Select a player</option>
+                    {players.map(player => (
+                      <option key={player._id} value={player._id}>
+                        {player.name} ({player.nrc}) - {player.club}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <Label htmlFor="toClub">Destination Club</Label>
@@ -133,7 +149,7 @@ export default function Transfers() {
                     id="toClub"
                     placeholder="Enter destination club name"
                     value={newTransfer.toClub}
-                    onChange={(e) => setNewTransfer({...newTransfer, toClub: e.target.value})}
+                    onChange={e => setNewTransfer({ ...newTransfer, toClub: e.target.value })}
                   />
                 </div>
                 <div>
@@ -142,30 +158,30 @@ export default function Transfers() {
                     id="amount"
                     placeholder="Enter transfer amount (e.g., K50,000)"
                     value={newTransfer.amount}
-                    onChange={(e) => setNewTransfer({...newTransfer, amount: e.target.value})}
+                    onChange={e => setNewTransfer({ ...newTransfer, amount: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label htmlFor="type">Transfer Type</Label>
-                  <select 
+                  <select
                     id="type"
                     className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
                     value={newTransfer.type}
-                    onChange={(e) => setNewTransfer({...newTransfer, type: e.target.value})}
+                    onChange={e => setNewTransfer({ ...newTransfer, type: e.target.value })}
                   >
                     <option value="Permanent">Permanent Transfer</option>
                     <option value="Loan">Loan Transfer</option>
                   </select>
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Button 
+                  <Button
                     onClick={handleSubmitTransfer}
                     className="flex-1 bg-primary hover:bg-primary/90"
                   >
                     Submit Transfer Request
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setIsDialogOpen(false)}
                     className="flex-1"
                   >
@@ -247,11 +263,11 @@ export default function Transfers() {
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search transfers..." 
+                  <Input
+                    placeholder="Search transfers..."
                     className="pl-10 w-80"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
                 </div>
                 <select className="px-3 py-2 border rounded-lg text-sm bg-background">
@@ -265,39 +281,42 @@ export default function Transfers() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredTransfers.map((transfer) => (
-                <div key={transfer.id} className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                      <ArrowRightLeft size={20} className="text-primary-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground text-lg">{transfer.playerName}</h3>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <span>NRC: {transfer.playerNRC}</span>
-                        <span>•</span>
-                        <span>{transfer.fromClub} → {transfer.toClub}</span>
-                        <span>•</span>
-                        <span>{transfer.amount}</span>
+              {filteredTransfers.map((transfer) => {
+                const player = transfer.player || {};
+                return (
+                  <div key={transfer._id} className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-6">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                        <ArrowRightLeft size={20} className="text-primary-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-lg">{player.name}</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <span>NRC: {player.nrc}</span>
+                          <span>•</span>
+                          <span>{transfer.fromClub} → {transfer.toClub}</span>
+                          <span>•</span>
+                          <span>{transfer.amount}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <Badge className={getStatusColor(transfer.status)}>
-                        <div className="flex items-center gap-1">
-                          {getStatusIcon(transfer.status)}
-                          {transfer.status}
-                        </div>
-                      </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">{transfer.requestDate}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <Badge className={getStatusColor(transfer.status)}>
+                          <div className="flex items-center gap-1">
+                            {getStatusIcon(transfer.status)}
+                            {transfer.status}
+                          </div>
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">{new Date(transfer.requestDate).toLocaleDateString()}</p>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        View Details
+                      </Button>
                     </div>
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>

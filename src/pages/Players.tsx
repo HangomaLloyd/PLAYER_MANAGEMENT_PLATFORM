@@ -174,10 +174,18 @@ export default function Players() {
             <Card>
               <CardContent className="p-8">
                 <div className="flex items-start gap-8">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                    <span className="text-3xl font-bold text-primary-foreground">
-                      {selectedPlayer.name.split(' ').map(n => n[0]).join('')}
-                    </span>
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg overflow-hidden">
+                    {selectedPlayer.avatar ? (
+                      <img
+                        src={selectedPlayer.avatar.startsWith('/') ? selectedPlayer.avatar : `/lovable-uploads/${selectedPlayer.avatar}`}
+                        alt={selectedPlayer.name}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-3xl font-bold text-primary-foreground">
+                        {selectedPlayer.name.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1">
                     <h1 className="text-3xl font-bold text-foreground mb-2">{selectedPlayer.name}</h1>
@@ -400,15 +408,17 @@ export default function Players() {
           <div className="bg-white p-8 rounded-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">Register New Player</h2>
             <form onSubmit={handleAddSubmit} className="space-y-4" encType="multipart/form-data">
-              <Input name="name" value={addForm.name || ""} onChange={handleAddFormChange} placeholder="Name" />
-              <Input name="age" value={addForm.age || ""} onChange={handleAddFormChange} placeholder="Age" type="number" />
-              <Input name="nrc" value={addForm.nrc || ""} onChange={handleAddFormChange} placeholder="NRC" />
-              <Input name="position" value={addForm.position || ""} onChange={handleAddFormChange} placeholder="Position" />
+              {/* Required fields for Player model */}
+              <Input name="name" value={addForm.name || ""} onChange={handleAddFormChange} placeholder="Name" required />
+              <Input name="age" value={addForm.age || ""} onChange={handleAddFormChange} placeholder="Age" type="number" required />
+              <Input name="nrc" value={addForm.nrc || ""} onChange={handleAddFormChange} placeholder="NRC" required />
+              <Input name="position" value={addForm.position || ""} onChange={handleAddFormChange} placeholder="Position" required />
+              <Input name="joined" value={addForm.joined || ""} onChange={handleAddFormChange} placeholder="Date Joined" type="date" required />
+              {/* Optional fields */}
               <Input name="club" value={addForm.club || ""} onChange={handleAddFormChange} placeholder="Club" />
               <Input name="nationality" value={addForm.nationality || ""} onChange={handleAddFormChange} placeholder="Nationality" />
               <Input name="phone" value={addForm.phone || ""} onChange={handleAddFormChange} placeholder="Phone" />
               <Input name="email" value={addForm.email || ""} onChange={handleAddFormChange} placeholder="Email" />
-              <Input name="joined" value={addForm.joined || ""} onChange={handleAddFormChange} placeholder="Date Joined" type="date" />
               <Input type="file" name="avatar" accept="image/*" onChange={handleAddFileChange} />
               <div className="flex gap-2">
                 <Button type="submit" disabled={addLoading} className="bg-primary text-white">{addLoading ? "Saving..." : "Save"}</Button>

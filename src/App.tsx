@@ -12,7 +12,7 @@ import Matches from "./pages/Matches";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import AuthPage from "./pages/AuthPage"; // Added import for the new AuthPage
+import AuthPage from "./pages/AuthPage.tsx";
 
 const queryClient = new QueryClient();
 
