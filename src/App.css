@@ -1,3 +1,47 @@
+/*
+ * This file contains global CSS styles, including the custom background.
+ * Ensure this file is imported in your application's main entry point (e.g., App.tsx or main.tsx).
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.4% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.4% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.4% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.4% 17.5%;
+    --input: 217.2 32.4% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
+  }
+
+  /* * A more dynamic and modern football-themed background.
+   * This uses a combination of a radial gradient for a subtle glow effect
+   * and a tessellating SVG pattern for a refined, geometric texture.
+   */
+  .football-background {
+    background-color: #0d0e0d;
+    background-image: radial-gradient(at 50% 50%, #1e2420, #0d0e0d),
+                      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 L100 25 L50 50 L0 25 Z' fill='%231a1a1a'/%3E%3Cpath d='M50 50 L100 75 L50 100 L0 75 Z' fill='%231a1a1a'/%3E%3C/svg%3E");
+    background-size: cover, 100px 100px;
+    background-position: center;
+  }
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

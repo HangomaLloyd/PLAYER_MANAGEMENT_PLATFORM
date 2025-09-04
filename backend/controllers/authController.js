@@ -73,7 +73,16 @@ export const login = async (req, res) => {
     }
 
     // Compare the provided password with the stored hashed password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Handle both old (double-hashed) and new (single-hashed) passwords
+    let isMatch = await bcrypt.compare(password, user.password);
+    
+    // If direct comparison fails, try comparing with manually hashed password
+    // (for accounts created before the password hashing fix)
+    if (!isMatch) {
+      const manuallyHashedPassword = await bcrypt.hash(password, 10);
+      isMatch = await bcrypt.compare(manuallyHashedPassword, user.password);
+    }
+    
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
