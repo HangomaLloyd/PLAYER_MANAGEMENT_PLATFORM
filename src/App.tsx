@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/AuthPage.tsx";
+import ProtectedRoute from "./components/ProtectedRoute";
 // Super Admin imports
 import SuperAdminLayout from "./pages/superadmin/SuperAdminLayout";
 import SuperAdminOverview from "./pages/superadmin/SuperAdminOverview";
@@ -38,7 +39,7 @@ const App = () => (
           <Route path="/auth" element={<AuthPage />} />
 
           {/* Main dashboard routes now under /dashboard */}
-          <Route path="/dashboard" element={<Layout />}>
+          <Route path="/dashboard" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route index element={<Index />} />
             <Route path="players" element={<Players />} />
             <Route path="players/:playerId" element={<Players />} />
@@ -48,7 +49,7 @@ const App = () => (
             <Route path="settings" element={<Settings />} />
           </Route>
           {/* Super Admin dashboard routes */}
-          <Route path="/superadmin" element={<SuperAdminLayout />}>
+          <Route path="/superadmin" element={<ProtectedRoute><SuperAdminLayout /></ProtectedRoute>}>
             <Route index element={<SuperAdminOverview />} />
             <Route path="clubs" element={<ClubsManagement />} />
             <Route path="players" element={<PlayersManagement />} />

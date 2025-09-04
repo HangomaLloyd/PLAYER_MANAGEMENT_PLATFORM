@@ -1,11 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Search, Plus, Edit, Filter } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Club, ClubFormData } from "@/lib/types";
 
-function fetchClubs() {
+function fetchClubs(): Promise<Club[]> {
   return fetch("/api/auth/clubs").then((res) => res.json());
 }
 
-function addClub(data) {
+function addClub(data: ClubFormData): Promise<Club> {
   return fetch("/api/auth/clubs", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -13,7 +20,7 @@ function addClub(data) {
   }).then((res) => res.json());
 }
 
-function updateClub(id, data) {
+function updateClub(id: string, data: Partial<ClubFormData>): Promise<Club> {
   return fetch(`/api/auth/clubs/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -23,20 +30,23 @@ function updateClub(id, data) {
 
 export default function ClubsManagement() {
   const queryClient = useQueryClient();
-  const { data: clubs = [], isLoading } = useQuery({ queryKey: ["clubs"], queryFn: fetchClubs });
+  const { data: clubs = [], isLoading } = useQuery<Club[]>({ queryKey: ["clubs"], queryFn: fetchClubs });
   const addMutation = useMutation({
     mutationFn: addClub,
-    onSuccess: () => queryClient.invalidateQueries(["clubs"]),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clubs"] }),
   });
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }) => updateClub(id, data),
-    onSuccess: () => queryClient.invalidateQueries(["clubs"]),
+    mutationFn: ({ id, ...data }: { id: string } & Partial<ClubFormData>) => updateClub(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clubs"] }),
   });
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [divisionFilter, setDivisionFilter] = useState("all");
+  const [provinceFilter, setProvinceFilter] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  const [editClub, setEditClub] = useState(null);
-  const [form, setForm] = useState({
+  const [editClub, setEditClub] = useState<Club | null>(null);
+  const [form, setForm] = useState<ClubFormData>({
     clubName: "",
     clubDivision: "",
     province: "",
@@ -45,10 +55,16 @@ export default function ClubsManagement() {
     phoneNumber: "",
   });
 
-  const filteredClubs = clubs.filter((c) =>
-    c.clubName?.toLowerCase().includes(search.toLowerCase()) ||
-    c.province?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredClubs = clubs.filter((c) => {
+    const matchesSearch = c.clubName?.toLowerCase().includes(search.toLowerCase()) ||
+                         c.province?.toLowerCase().includes(search.toLowerCase()) ||
+                         c.adminName?.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+    const matchesDivision = divisionFilter === "all" || c.clubDivision === divisionFilter;
+    const matchesProvince = provinceFilter === "all" || c.province === provinceFilter;
+
+    return matchesSearch && matchesStatus && matchesDivision && matchesProvince;
+  });
 
   function handleAdd() {
     addMutation.mutate(form, {
@@ -60,16 +76,18 @@ export default function ClubsManagement() {
   }
 
   function handleEdit() {
-    updateMutation.mutate({ id: editClub._id, ...form }, {
-      onSuccess: () => {
-        setShowEdit(false);
-        setEditClub(null);
-        setForm({ clubName: "", clubDivision: "", province: "", adminName: "", email: "", phoneNumber: "" });
-      },
-    });
+    if (editClub) {
+      updateMutation.mutate({ id: editClub._id, ...form }, {
+        onSuccess: () => {
+          setShowEdit(false);
+          setEditClub(null);
+          setForm({ clubName: "", clubDivision: "", province: "", adminName: "", email: "", phoneNumber: "" });
+        },
+      });
+    }
   }
 
-  function openEdit(club) {
+  function openEdit(club: Club) {
     setEditClub(club);
     setForm({
       clubName: club.clubName || "",
@@ -83,92 +101,289 @@ export default function ClubsManagement() {
   }
 
   return (
-    <div className="p-8 bg-gray-900 min-h-screen text-white">
-      <h2 className="text-2xl font-bold mb-6">Clubs Management</h2>
-      <div className="bg-gray-800 rounded-xl p-6 shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <input
-            type="text"
-            placeholder="Search clubs..."
-            className="px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 w-1/3"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <button onClick={() => setShowAdd(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">Add New Club</button>
-        </div>
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : (
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-gray-400">
-                <th className="py-2">Club Name</th>
-                <th>Division</th>
-                <th>Province</th>
-                <th>Admin</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+    <div className="flex-1 p-8">
+      {/* Header */}
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Clubs Management</h1>
+        <p className="text-muted-foreground">Manage and oversee all registered football clubs</p>
+      </header>
+
+      {/* Search and Filters */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              <div className="relative flex-1 max-w-sm">
+                <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search clubs..."
+                  className="pl-10"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={divisionFilter} onValueChange={setDivisionFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Division" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Divisions</SelectItem>
+                  <SelectItem value="Super League">Super League</SelectItem>
+                  <SelectItem value="Division One">Division One</SelectItem>
+                  <SelectItem value="Provincial League">Provincial League</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={provinceFilter} onValueChange={setProvinceFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Province" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Provinces</SelectItem>
+                  <SelectItem value="Lusaka">Lusaka</SelectItem>
+                  <SelectItem value="Copperbelt">Copperbelt</SelectItem>
+                  <SelectItem value="Central">Central</SelectItem>
+                  <SelectItem value="Eastern">Eastern</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={() => setShowAdd(true)} className="bg-primary hover:bg-primary/90">
+              <Plus size={16} className="mr-2" />
+              Add New Club
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Clubs Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Registered Clubs ({filteredClubs.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-2 text-muted-foreground">Loading clubs...</span>
+            </div>
+          ) : filteredClubs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No clubs found matching your criteria.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
               {filteredClubs.map((club) => (
-                <tr key={club._id} className="border-t border-gray-700">
-                  <td className="py-2">{club.clubName}</td>
-                  <td>{club.clubDivision}</td>
-                  <td>{club.province}</td>
-                  <td>{club.adminName}</td>
-                  <td>{club.email}</td>
-                  <td>{club.phoneNumber}</td>
-                  <td>
-                    <button className="text-blue-400 hover:underline mr-2" onClick={() => openEdit(club)}>Edit</button>
-                  </td>
-                </tr>
+                <div key={club._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <span className="text-lg font-bold text-primary">
+                        {club.clubName?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{club.clubName}</h3>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{club.clubDivision}</span>
+                        <span>•</span>
+                        <span>{club.province}</span>
+                        <span>•</span>
+                        <span>{club.adminName}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right text-sm">
+                      <p className="text-muted-foreground">{club.email}</p>
+                      <p className="text-muted-foreground">{club.phoneNumber}</p>
+                    </div>
+                    <Badge variant={club.status === 'active' ? 'default' : 'secondary'}>
+                      {club.status || 'Active'}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(club)}
+                      className="text-primary hover:text-primary/80"
+                    >
+                      <Edit size={14} className="mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Add Club Modal */}
       {showAdd && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Add New Club</h3>
-            <div className="space-y-3">
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Club Name" value={form.clubName} onChange={e => setForm(f => ({ ...f, clubName: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Division" value={form.clubDivision} onChange={e => setForm(f => ({ ...f, clubDivision: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Province" value={form.province} onChange={e => setForm(f => ({ ...f, province: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Admin Name" value={form.adminName} onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Phone Number" value={form.phoneNumber} onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))} />
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowAdd(false)} className="px-4 py-2 rounded bg-gray-600 text-white">Cancel</button>
-              <button onClick={handleAdd} className="px-4 py-2 rounded bg-blue-600 text-white font-semibold">Add</button>
-            </div>
-          </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Add New Club</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground">Club Name</label>
+                <Input
+                  placeholder="Enter club name"
+                  value={form.clubName}
+                  onChange={e => setForm(f => ({ ...f, clubName: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Division</label>
+                <Select value={form.clubDivision} onValueChange={value => setForm(f => ({ ...f, clubDivision: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Super League">Super League</SelectItem>
+                    <SelectItem value="Division One">Division One</SelectItem>
+                    <SelectItem value="Provincial League">Provincial League</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Province</label>
+                <Select value={form.province} onValueChange={value => setForm(f => ({ ...f, province: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select province" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Lusaka">Lusaka</SelectItem>
+                    <SelectItem value="Copperbelt">Copperbelt</SelectItem>
+                    <SelectItem value="Central">Central</SelectItem>
+                    <SelectItem value="Eastern">Eastern</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Admin Name</label>
+                <Input
+                  placeholder="Enter admin name"
+                  value={form.adminName}
+                  onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Email</label>
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Phone Number</label>
+                <Input
+                  placeholder="Enter phone number"
+                  value={form.phoneNumber}
+                  onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowAdd(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAdd} disabled={addMutation.isPending}>
+                  {addMutation.isPending ? "Adding..." : "Add Club"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Edit Club Modal */}
       {showEdit && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Edit Club</h3>
-            <div className="space-y-3">
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Club Name" value={form.clubName} onChange={e => setForm(f => ({ ...f, clubName: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Division" value={form.clubDivision} onChange={e => setForm(f => ({ ...f, clubDivision: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Province" value={form.province} onChange={e => setForm(f => ({ ...f, province: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Admin Name" value={form.adminName} onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-              <input className="w-full p-2 rounded bg-gray-700 text-white" placeholder="Phone Number" value={form.phoneNumber} onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))} />
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowEdit(false)} className="px-4 py-2 rounded bg-gray-600 text-white">Cancel</button>
-              <button onClick={handleEdit} className="px-4 py-2 rounded bg-blue-600 text-white font-semibold">Save</button>
-            </div>
-          </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Edit Club</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground">Club Name</label>
+                <Input
+                  placeholder="Enter club name"
+                  value={form.clubName}
+                  onChange={e => setForm(f => ({ ...f, clubName: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Division</label>
+                <Select value={form.clubDivision} onValueChange={value => setForm(f => ({ ...f, clubDivision: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Super League">Super League</SelectItem>
+                    <SelectItem value="Division One">Division One</SelectItem>
+                    <SelectItem value="Provincial League">Provincial League</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Province</label>
+                <Select value={form.province} onValueChange={value => setForm(f => ({ ...f, province: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select province" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Lusaka">Lusaka</SelectItem>
+                    <SelectItem value="Copperbelt">Copperbelt</SelectItem>
+                    <SelectItem value="Central">Central</SelectItem>
+                    <SelectItem value="Eastern">Eastern</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Admin Name</label>
+                <Input
+                  placeholder="Enter admin name"
+                  value={form.adminName}
+                  onChange={e => setForm(f => ({ ...f, adminName: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Email</label>
+                <Input
+                  type="email"
+                  placeholder="Enter email"
+                  value={form.email}
+                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">Phone Number</label>
+                <Input
+                  placeholder="Enter phone number"
+                  value={form.phoneNumber}
+                  onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowEdit(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEdit} disabled={updateMutation.isPending}>
+                  {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

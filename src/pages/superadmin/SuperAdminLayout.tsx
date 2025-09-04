@@ -5,9 +5,9 @@ export default function SuperAdminLayout() {
   return (
     <div className="min-h-screen bg-background flex">
       <SuperAdminSidebar />
-      <div className="flex-1 flex flex-col">
+      <main className="flex-1 bg-background">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }

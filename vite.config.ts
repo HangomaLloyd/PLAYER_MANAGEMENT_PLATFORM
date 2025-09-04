@@ -15,6 +15,10 @@ export default defineConfig(({ mode }) => ({
         secure: false,
       },
     },
+    // Add this watch configuration to ignore node_modules
+    watch: {
+      ignored: ['**/node_modules/**']
+    }
   },
   plugins: [
     react(),

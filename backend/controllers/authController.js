@@ -4,9 +4,14 @@ import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 
 
-// A secret key for signing JWTs. In production, this should be
-// an environment variable, not hardcoded.
-const JWT_SECRET = 'your-very-secure-and-long-secret-key';
+// JWT Secret validation function
+const getJWTSecret = () => {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+  }
+  return JWT_SECRET;
+};
 
 // Handle user registration
 export const signup = async (req, res) => {
@@ -23,13 +28,10 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists.' });
     }
 
-    // Hash the password for security
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create a new user document (add more fields as needed)
+    // Create a new user document (password will be hashed by pre-save hook)
     const newUser = new User({
       email,
-      password: hashedPassword,
+      password,
       clubName,
       adminName,
       adminRole,
@@ -42,14 +44,15 @@ export const signup = async (req, res) => {
     await newUser.save();
 
 
-    // Generate a JWT token with club info for dashboard display
+    // Generate a JWT token with user info for dashboard display
     const token = jwt.sign({
       userId: newUser._id,
       email: newUser.email,
+      role: newUser.role,
       clubName: newUser.clubName,
       adminName: newUser.adminName,
       logo: newUser.logo
-    }, JWT_SECRET, { expiresIn: '1h' });
+    }, JWT_SECRET, { expiresIn: '24h' });
 
     console.log(`New user signed up: ${email}`);
     res.status(201).json({ message: 'User registered successfully.', token });
@@ -63,8 +66,8 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find the user by email
-    const user = await User.findOne({ email });
+    // Find the user by email and explicitly select the password field
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
@@ -75,19 +78,21 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
-
-    // Generate a JWT token with club info for dashboard display
+    // Generate a JWT token with user info for dashboard display
     const token = jwt.sign({
       userId: user._id,
       email: user.email,
-      clubName: user.clubName,
-      adminName: user.adminName,
-      logo: user.logo
-    }, JWT_SECRET, { expiresIn: '1h' });
+      role: user.role,
+      clubName: user.clubName || null,
+      adminName: user.adminName || null,
+      logo: user.logo || null
+    }, getJWTSecret(), { expiresIn: '24h' });
 
     console.log(`User logged in: ${email}`);
     res.json({ message: 'Login successful.', token });
   } catch (err) {
+    console.error('Login error details:', err.message);
+    console.error('Login error stack:', err.stack);
     res.status(500).json({ message: 'An unexpected error occurred during login.' });
   }
 };
