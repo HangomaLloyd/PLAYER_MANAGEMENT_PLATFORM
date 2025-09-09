@@ -1,68 +1,88 @@
-# Welcome to your Lovable project
+# PLAYER_MANAGEMENT_PLATFORM
 
-## Project info
+## Overview
+This repository is a multi-tenant football club management platform. It allows each club admin to manage their own club's players, matches, transfers, and reports, with a modern React frontend and a unified Node.js/Express backend using MongoDB.
 
-**URL**: https://lovable.dev/projects/470a53d8-6c7a-4cc9-8706-8fbb740d6712
+## Project Structure
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/470a53d8-6c7a-4cc9-8706-8fbb740d6712) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+ZAM-FOOT-CENTRAL/
+├── frontendone/           # Main club admin dashboard (React + Vite + TypeScript)
+│   └── club-admin-dashboard/
+├── frontendtwo/           # (Optional/experimental) second frontend
+├── unified-backend-api/   # Unified Node.js/Express backend API (MongoDB)
+├── public/                # Shared static assets
+├── src/                   # (Legacy or shared) source files
+├── ...                    # Config files, lockfiles, etc.
 ```
 
-**Edit a file directly in GitHub**
+### frontendone/club-admin-dashboard
+- Modern React (Vite, TypeScript) dashboard for club admins
+- Features: login/signup, player management, transfers, match reports, club settings
+- Uses localStorage for session and club context
+- Connects to unified-backend-api for all data
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### frontendtwo/
+- Placeholder for a second frontend (e.g., super admin, analytics, or future expansion)
 
-**Use GitHub Codespaces**
+### unified-backend-api/
+- Node.js/Express REST API
+- MongoDB for data storage
+- JWT authentication
+- Endpoints for clubs, players, matches, transfers, and user management
+- File upload support for player images and documents
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Getting Started
 
-## What technologies are used for this project?
+1. **Install dependencies:**
+	```bash
+	cd unified-backend-api && npm install
+	cd ../frontendone/club-admin-dashboard && npm install
+	```
+2. **Configure environment:**
+	- Copy `.env.example` to `.env` in `unified-backend-api/` and set your MongoDB URI and JWT secret.
+3. **Run backend:**
+	```bash
+	cd unified-backend-api
+	npm start
+	```
+4. **Run frontend:**
+	```bash
+	cd frontendone/club-admin-dashboard
+	npm run dev
+	```
+5. **Access the app:**
+	- Visit `http://localhost:5173` (or the port shown in the terminal)
 
-This project is built with:
+## Notes
+### Data Storage & Environment
+- Currently, the backend uses a **local instance of MongoDB** for all data storage. All test data, including player images and documents, are stored in the `lovable-uploads` folder on the local filesystem.
+- In the future, the project will switch to a cloud storage platform (e.g., Cloudinary) for uploads and an online database (MongoDB Atlas or PostgreSQL) for production use.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
+### Features
+- **Register a player:** Club admins can add new players to their club.
+- **Create a transfer request:** Club admins can initiate transfer requests for players.
+- **Other features (in progress):**
+	- Club-to-club interactions
+	- Match scheduling and reporting
+	- Advanced analytics and dashboards
+	- Super admin and multi-club management
+
+### Additional Notes
+- The codebase currently has some TypeScript issues (about 53). These do not prevent running the app but should be addressed for production.
+- The old backend (`backend/`) has been removed. Only `unified-backend-api/` is used.
+- The README no longer references the lovable site or any legacy code.
+
+## Contributing
+- Please open issues or pull requests for bug fixes, improvements, or TypeScript fixes.
+
+## License
+MIT
 - Tailwind CSS
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/470a53d8-6c7a-4cc9-8706-8fbb740d6712) and click on Share -> Publish.
+
 
 ## Can I connect a custom domain to my Lovable project?
 
