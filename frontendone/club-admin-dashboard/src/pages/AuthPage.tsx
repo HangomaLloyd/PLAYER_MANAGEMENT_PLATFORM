@@ -168,25 +168,19 @@ export default function AuthPage() {
         return;
       }
       
-      // We will now simulate a real API response with the correct club data
-      let clubData;
-      // This is a temporary way to mock fetching different user data
-      // In a real application, the server would return this data.
-      if (email === "test@test.com") {
-         clubData = {
-          name: "FAZ",
-          logo: "https://placehold.co/48x48/1A4B00/FFFFFF?text=FAZ"
-        };
-      } else {
-        clubData = {
-          name: "Mighty Mufulira Wanderers",
-          logo: "https://placehold.co/48x48/01306C/FFFFFF?text=MMW",
-        };
-      }
-      
-      localStorage.setItem("clubData", JSON.stringify(clubData));
 
-      // On successful login, redirect to dashboard or other authenticated page
+      // Fetch real club info by email from backend
+      localStorage.removeItem("clubData");
+      const clubRes = await fetch(`/api/clubs/by-email/${encodeURIComponent(email)}`, {
+        headers: { Authorization: `Bearer ${data.token}` },
+      });
+      const clubData = await clubRes.json();
+      if (!clubRes.ok) throw new Error(clubData.message || "Failed to fetch club info");
+      localStorage.setItem("clubData", JSON.stringify({
+        name: clubData.clubName,
+        logo: clubData.clubLogo,
+        id: clubData._id,
+      }));
       navigate("/dashboard");
 
     } catch (err) {
@@ -432,9 +426,9 @@ export default function AuthPage() {
             </Button>
             <div className="mt-4 text-center text-sm text-gray-400">
               Already have an account?{" "}
-              <Link onClick={() => setView("login")} className="underline">
+              <button type="button" onClick={() => setView("login")} className="underline text-blue-400 hover:text-blue-600 bg-transparent border-none p-0 cursor-pointer">
                 Log in
-              </Link>
+              </button>
             </div>
           </CardContent>
         </form>
@@ -488,9 +482,9 @@ export default function AuthPage() {
             </Button>
             <div className="mt-4 text-center text-sm text-gray-400">
               Don't have an account?{" "}
-              <Link onClick={() => setView("register")} className="underline">
+              <button type="button" onClick={() => setView("register")} className="underline text-blue-400 hover:text-blue-600 bg-transparent border-none p-0 cursor-pointer">
                 Register
-              </Link>
+              </button>
             </div>
           </CardContent>
         </form>

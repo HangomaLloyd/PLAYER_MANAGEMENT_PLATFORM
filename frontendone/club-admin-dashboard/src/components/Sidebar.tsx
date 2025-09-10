@@ -45,9 +45,25 @@ export default function Sidebar() {
     // Load club data
     const savedClubData = localStorage.getItem("clubData");
     if (savedClubData) {
-      setClubData(JSON.parse(savedClubData));
+      try { setClubData(JSON.parse(savedClubData)); } catch(e) { setClubData(null); }
     }
   }, []);
+
+  // Compute logo src in a robust way to handle full URLs, root-relative paths, and filenames
+  const logoVal = clubData ? (clubData.clubLogo || clubData.logo) : null;
+  let logoSrc: string | null = null;
+  if (logoVal) {
+    if (/^https?:\/\//i.test(logoVal) || logoVal.startsWith('//')) {
+      logoSrc = logoVal;
+    } else if (logoVal.startsWith('/')) {
+      logoSrc = logoVal;
+    } else {
+      logoSrc = `/lovable-uploads/${logoVal}`;
+    }
+    // append timestamp to bust cache when logo changes
+    const sep = logoSrc.includes('?') ? '&' : '?';
+    logoSrc = `${logoSrc}${sep}t=${Date.now()}`;
+  }
 
   // Handle theme toggle and update local storage
   const toggleTheme = () => {
@@ -64,6 +80,14 @@ export default function Sidebar() {
   const handleLogout = () => {
     localStorage.removeItem("jwt");
     localStorage.removeItem("clubData"); // Clear club data on logout
+
+    // Clear all cookies (including sidebar state)
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/");
+    });
+
     navigate("/auth");
   };
 
@@ -73,13 +97,13 @@ export default function Sidebar() {
         {/* Header - Now shows Club Logo and Name */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            {clubData && clubData.logo ? (
-              // Display club logo if available
+      {logoSrc ? (
+              // Display club logo if available; prefer clubLogo field
               <img
-                src={clubData.logo.startsWith('/') ? clubData.logo : `/lovable-uploads/${clubData.logo}`}
+                src={logoSrc}
                 alt={`${clubData.name} Logo`}
                 className="w-12 h-12 rounded-full object-cover border-2 border-sidebar-primary"
-                onError={e => { e.currentTarget.style.display = 'none'; }}
+                onError={e => { e.currentTarget.src = '/placeholder.svg'; }}
               />
             ) : clubData && clubData.name ? (
               // Fallback to initials if no logo but club name exists

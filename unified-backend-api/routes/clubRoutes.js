@@ -1,7 +1,23 @@
 import express from 'express';
 import Club from '../models/Club.js'; // Assuming you have this model created
+import mongoose from 'mongoose';
 import User from '../models/User.js'; // Assuming you have this model created
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import path from 'path';
+
+// Configure multer storage for club logos
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/lovable-uploads');
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const name = `${Date.now()}-${file.fieldname}${ext}`;
+    cb(null, name);
+  }
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 const router = express.Router();
 
@@ -108,4 +124,27 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Update club info (fields + optional logo upload)
+router.patch('/:id', upload.single('clubLogo'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Validate id
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid club id.' });
+    }
+    const update = { ...req.body };
+    if (req.file) {
+      // Save filename or full path depending on preference
+      update.clubLogo = `/lovable-uploads/${req.file.filename}`;
+    }
+    const club = await Club.findByIdAndUpdate(id, update, { new: true });
+    if (!club) return res.status(404).json({ message: 'Club not found.' });
+    res.json(club);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update club.' });
+  }
+});
+
 export default router;
+

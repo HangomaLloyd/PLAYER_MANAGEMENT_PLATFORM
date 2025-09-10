@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,74 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { User, Bell, Shield, Database, Palette, Globe } from "lucide-react";
 
+const API_BASE = '/api';
+
 export default function Settings() {
+  const [club, setClub] = useState<any | null>(null);
+  const [website, setWebsite] = useState('');
+  const [socialLinks, setSocialLinks] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('clubData');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setClub(parsed);
+  setWebsite(parsed.websiteUrl || '');
+  setSocialLinks(parsed.socialMediaLinks || '');
+  // support both clubLogo and logo keys that may come from different endpoints
+  setLogoPreview(parsed.clubLogo || parsed.logo || null);
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    if (!f) return;
+    setLogoFile(f);
+    setLogoPreview(URL.createObjectURL(f));
+  };
+
+  const handleSave = async () => {
+    if (!club) return alert('No club loaded');
+  const clubId = club ? (club._id || club.id || club.id) : null;
+    if (!clubId) return alert('Club id missing. Please reload or re-login.');
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.append('websiteUrl', website);
+      form.append('socialMediaLinks', socialLinks);
+      if (logoFile) form.append('clubLogo', logoFile);
+      const res = await fetch(`${API_BASE}/clubs/${clubId}`, {
+        method: 'PATCH',
+        body: form,
+      });
+      const updated = await res.json();
+      if (!res.ok) throw new Error(updated.message || 'Save failed');
+      // store a consistent clubData shape for the frontend (used by Sidebar)
+      const normalized = {
+        _id: updated._id || updated.id,
+        name: updated.clubName || updated.name || club?.name,
+        clubLogo: updated.clubLogo || updated.logo || null,
+        websiteUrl: updated.websiteUrl || null,
+        socialMediaLinks: updated.socialMediaLinks || null,
+      };
+      localStorage.setItem('clubData', JSON.stringify(normalized));
+      setClub(normalized);
+  // ensure preview updates and bypass browser cache
+  const newLogo = updated.clubLogo || updated.logo || null;
+  setLogoPreview(newLogo ? (newLogo + (newLogo.includes('?') ? '&' : '?') + 't=' + Date.now()) : null);
+  setLogoFile(null);
+      alert('Saved');
+    } catch (err: any) {
+      alert(err.message || 'Save failed');
+    }
+    setSaving(false);
+  };
+
   return (
     <div className="flex-1">
       {/* Header */}
@@ -53,6 +121,48 @@ export default function Settings() {
               <Button className="bg-primary hover:bg-primary/90">
                 Save Profile Changes
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* Club Settings */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User size={20} className="text-primary" />
+                </div>
+                <CardTitle>Club Settings</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 rounded-full bg-muted overflow-hidden flex items-center justify-center border">
+                  {logoPreview ? (
+                    // use absolute or relative URL stored
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoPreview} alt="club logo" className="w-full h-full object-cover" onError={(e:any)=>{e.currentTarget.src='/placeholder.svg'}} />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No Logo</div>
+                  )}
+                </div>
+                <div>
+                  <Label>Club Logo</Label>
+                  <Input type="file" accept="image/*" onChange={handleLogoChange} />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="website">Official Website</Label>
+                <Input id="website" value={website} onChange={(e)=>setWebsite(e.target.value)} placeholder="https://example.com" />
+              </div>
+              <div>
+                <Label htmlFor="social">Social Links (JSON or comma-separated)</Label>
+                <Input id="social" value={socialLinks} onChange={(e)=>setSocialLinks(e.target.value)} placeholder="https://facebook.com/club, https://twitter.com/club" />
+              </div>
+              <div className="flex gap-2">
+                <Button className="bg-primary hover:bg-primary/90" onClick={handleSave} disabled={saving}>{saving?'Saving...':'Save Club Settings'}</Button>
+                <Button variant="outline" onClick={()=>{ setLogoFile(null); try{ setLogoPreview(club?.clubLogo || null) }catch{} }}>Cancel</Button>
+              </div>
             </CardContent>
           </Card>
 

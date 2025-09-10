@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Search, Plus, Eye, Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,11 @@ import { useNavigate, useParams } from "react-router-dom";
 const API_BASE_URL = "/api";
 
 export default function Players() {
+  // Router hooks
   const navigate = useNavigate();
   const { playerId } = useParams();
+
+  // Core UI state (always declared in the same order)
   const [searchTerm, setSearchTerm] = useState("");
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,6 +32,9 @@ export default function Players() {
   const [addFile, setAddFile] = useState<File | null>(null);
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
+  // Delete player state (always declared)
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   // Handle file input change for avatar
   const handleAddFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -50,23 +56,31 @@ export default function Players() {
     fetchPlayers();
   }, []);
 
-  const selectedPlayer = playerId ? players.find(p => p._id === playerId) : null;
-  // Get user role and club from localStorage
-  let userRole = 'club-admin';
-  let userClub = '';
-  try {
-    const clubData = JSON.parse(localStorage.getItem('clubData'));
-    userClub = clubData?.name || '';
-    // If you store role in JWT, decode it here, else default to club-admin
-    // For demo, allow override via localStorage.setItem('userRole', 'super-admin')
-    userRole = localStorage.getItem('userRole') || 'club-admin';
-  } catch {}
+  // Derived values (pure, not hooks)
+  const selectedPlayer = playerId ? players.find((p) => p._id === playerId) : null;
 
-  const filteredPlayers = players.filter(player =>
-    player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    player.nrc.includes(searchTerm) ||
-    player.position.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get user role and club from localStorage (safe, synchronous)
+  let userRole = "club-admin";
+  let userClub = "";
+  try {
+    const clubDataRaw = localStorage.getItem("clubData");
+    if (clubDataRaw) {
+      const clubData = JSON.parse(clubDataRaw);
+      userClub = clubData?.name || "";
+    }
+    userRole = localStorage.getItem("userRole") || "club-admin";
+  } catch (e) {
+    /* ignore parse errors */
+  }
+
+  const filteredPlayers = players.filter((player) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      player.name?.toLowerCase().includes(q) ||
+      String(player.nrc || "").includes(searchTerm) ||
+      player.position?.toLowerCase().includes(q)
+    );
+  });
 
   if (loading) {
     return <div className="p-8">Loading players...</div>;
@@ -156,32 +170,33 @@ export default function Players() {
     setAddLoading(false);
   };
 
+  // Permission helper
+  const canDelete = Boolean(
+    selectedPlayer &&
+      (userRole === "super-admin" || (userRole === "club-admin" && selectedPlayer.status !== "Active" && selectedPlayer.club === userClub))
+  );
+
+  const handleDelete = async () => {
+    if (!selectedPlayer) return;
+    if (!window.confirm("Are you sure you want to deregister this player?")) return;
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/players/${selectedPlayer._id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to delete player.");
+      setPlayers((prev) => prev.filter((p) => p._id !== selectedPlayer._id));
+      navigate("/dashboard/players");
+    } catch (err: any) {
+      setDeleteError(err.message || "Delete failed.");
+    }
+    setDeleteLoading(false);
+  };
+
   if (selectedPlayer) {
-    // Only show delete if:
-    // - super-admin
-    // - or club-admin AND player.status !== 'Active' AND player.club === userClub
-    const canDelete = userRole === 'super-admin' || (userRole === 'club-admin' && selectedPlayer.status !== 'Active' && selectedPlayer.club === userClub);
-    const [deleteLoading, setDeleteLoading] = useState(false);
-    const [deleteError, setDeleteError] = useState("");
-    const handleDelete = async () => {
-      if (!window.confirm('Are you sure you want to deregister this player?')) return;
-      setDeleteLoading(true);
-      setDeleteError("");
-      try {
-        const res = await fetch(`${API_BASE_URL}/players/${selectedPlayer._id}`, {
-          method: 'DELETE',
-          headers: getAuthHeaders(),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to delete player.');
-        // Remove from UI
-        setPlayers(players.filter(p => p._id !== selectedPlayer._id));
-        navigate('/dashboard/players');
-      } catch (err) {
-        setDeleteError(err.message);
-      }
-      setDeleteLoading(false);
-    };
     return (
       <div className="flex-1">
         {/* Header */}
