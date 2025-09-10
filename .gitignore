@@ -25,3 +25,10 @@ Editor directories and files
 *.njsproj
 *.sln
 *.sw?
+
+# Ignore legacy folders and upload artifacts
+backend/
+.qodo/
+# uploaded images folder used by the app (do not track large binary uploads)
+lovable-uploads/
+public/lovable-uploads/
