@@ -1,7 +1,9 @@
 import { Users, UserCheck, Clock, Ban } from "lucide-react";
+
 import StatsCard from "@/components/StatsCard";
 import PlayerRoster from "@/components/PlayerRoster";
 import RecentActivity from "@/components/RecentActivity";
+
 
 const Index = () => {
   return (
@@ -30,6 +32,7 @@ const Index = () => {
 
         {/* Dashboard Content */}
         <main className="flex-1 p-8">
+          {/* League Table removed from dashboard */}
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatsCard

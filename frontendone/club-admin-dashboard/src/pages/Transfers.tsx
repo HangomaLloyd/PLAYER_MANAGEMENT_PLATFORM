@@ -20,54 +20,48 @@ export default function Transfers() {
     amount: "",
     type: "Permanent"
   });
+  const [clubs, setClubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [transfersRes, playersRes] = await Promise.all([
+        const [transfersRes, playersRes, clubsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/transfers`),
-          fetch(`${API_BASE_URL}/players`)
+          fetch(`${API_BASE_URL}/players`),
+          fetch(`${API_BASE_URL}/clubs`)
         ]);
         const transfersData = await transfersRes.json();
         const playersData = await playersRes.json();
+        const clubsData = await clubsRes.json();
         setTransfers(transfersData);
         setPlayers(playersData);
+        setClubs(clubsData);
       } catch (err) {
-        setError("Failed to fetch transfers or players.");
+        setError("Failed to fetch transfers, players, or clubs.");
       }
       setLoading(false);
     };
     fetchData();
   }, []);
-
+  // Helper functions
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Approved':
-        return 'bg-success text-success-foreground';
-      case 'Rejected':
-        return 'bg-destructive text-destructive-foreground';
-      case 'Pending':
-        return 'bg-warning text-warning-foreground';
-      default:
-        return 'bg-muted text-muted-foreground';
+      case 'Approved': return 'bg-success text-success-foreground';
+      case 'Rejected': return 'bg-destructive text-destructive-foreground';
+      case 'Pending': return 'bg-warning text-warning-foreground';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
-
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Approved':
-        return <CheckCircle size={16} />;
-      case 'Rejected':
-        return <XCircle size={16} />;
-      case 'Pending':
-        return <Clock size={16} />;
-      default:
-        return <Clock size={16} />;
+      case 'Approved': return <CheckCircle size={16} />;
+      case 'Rejected': return <XCircle size={16} />;
+      case 'Pending': return <Clock size={16} />;
+      default: return <Clock size={16} />;
     }
   };
-
   const filteredTransfers = transfers.filter(transfer => {
     const player = transfer.player || {};
     return (
@@ -77,7 +71,6 @@ export default function Transfers() {
       (transfer.toClub || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
-
   const handleSubmitTransfer = async () => {
     try {
       const player = players.find(p => p._id === newTransfer.playerId);
@@ -101,14 +94,53 @@ export default function Transfers() {
       setTransfers([created, ...transfers]);
       setIsDialogOpen(false);
       setNewTransfer({ playerId: "", toClub: "", amount: "", type: "Permanent" });
-    } catch (err) {
-      setError((err as Error).message || "Failed to create transfer");
+    } catch (err: any) {
+      setError(err.message || "Failed to create transfer");
     }
   };
-
+  // Get current club from localStorage
+  let currentClub = "";
+  try {
+    const clubDataRaw = localStorage.getItem("clubData");
+    if (clubDataRaw) {
+      const clubData = JSON.parse(clubDataRaw);
+      currentClub = clubData?.name || "";
+    }
+  } catch (e) {}
+  // Incoming transfer requests for this club
+  const incomingTransfers = transfers.filter(
+    t => t.toClub === currentClub && t.status === "Pending"
+  );
+  // Accept/reject handlers
+  const handleAccept = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/transfers/${id}/accept`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
+      });
+      if (!res.ok) throw new Error("Failed to accept transfer");
+      const updated = await res.json();
+      setTransfers(prev => prev.map(t => t._id === id ? updated : t));
+    } catch (err) {
+      setError("Failed to accept transfer");
+    }
+  };
+  const handleReject = async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/transfers/${id}/reject`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${localStorage.getItem("jwt")}` },
+      });
+      if (!res.ok) throw new Error("Failed to reject transfer");
+      const updated = await res.json();
+      setTransfers(prev => prev.map(t => t._id === id ? updated : t));
+    } catch (err) {
+      setError("Failed to reject transfer");
+    }
+  };
+  // Main JSX
   return (
     <div className="flex-1">
-      {/* Header */}
       <header className="bg-card border-b px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
@@ -145,12 +177,24 @@ export default function Transfers() {
                 </div>
                 <div>
                   <Label htmlFor="toClub">Destination Club</Label>
-                  <Input
+                  <select
                     id="toClub"
-                    placeholder="Enter destination club name"
+                    className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
                     value={newTransfer.toClub}
                     onChange={e => setNewTransfer({ ...newTransfer, toClub: e.target.value })}
-                  />
+                  >
+                    <option value="">Select destination club</option>
+                    {clubs
+                      .filter(club => {
+                        const selectedPlayer = players.find(p => p._id === newTransfer.playerId);
+                        return selectedPlayer ? club.clubName !== selectedPlayer.club : true;
+                      })
+                      .map(club => (
+                        <option key={club._id} value={club.clubName}>
+                          {club.clubName}
+                        </option>
+                      ))}
+                  </select>
                 </div>
                 <div>
                   <Label htmlFor="amount">Transfer Amount</Label>
@@ -193,7 +237,50 @@ export default function Transfers() {
           </Dialog>
         </div>
       </header>
-
+      {/* Incoming Transfer Requests Section */}
+      {incomingTransfers.length > 0 && (
+        <main className="flex-1 p-8">
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Incoming Transfer Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {incomingTransfers.map(transfer => {
+                  const player = transfer.player || {};
+                  return (
+                    <div key={transfer._id} className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                          <ArrowRightLeft size={20} className="text-primary-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground text-lg">{player.name}</h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                            <span>NRC: {player.nrc}</span>
+                            <span>•</span>
+                            <span>{transfer.fromClub} → {transfer.toClub}</span>
+                            <span>•</span>
+                            <span>{transfer.amount}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Button variant="outline" size="sm" onClick={() => handleAccept(transfer._id)}>
+                          Accept
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleReject(transfer._id)}>
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </main>
+      )}
       {/* Content */}
       <main className="flex-1 p-8">
         {/* Stats Cards */}
@@ -211,50 +298,8 @@ export default function Transfers() {
               </div>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Approved This Month</p>
-                  <p className="text-2xl font-bold text-foreground">12</p>
-                </div>
-                <div className="p-3 rounded-lg bg-success/10 text-success">
-                  <CheckCircle size={24} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                  <p className="text-2xl font-bold text-foreground">K2.4M</p>
-                </div>
-                <div className="p-3 rounded-lg bg-accent/10 text-accent">
-                  <ArrowRightLeft size={24} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Transfers</p>
-                  <p className="text-2xl font-bold text-foreground">28</p>
-                </div>
-                <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                  <ArrowRightLeft size={24} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* ...other cards... */}
         </div>
-
         {/* Transfers Table */}
         <Card>
           <CardHeader>

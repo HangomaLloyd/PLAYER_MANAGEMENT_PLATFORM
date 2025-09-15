@@ -1,8 +1,10 @@
 import { useState } from "react";
+
 import { Calendar, MapPin, Trophy, Users, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import LeagueTable from "@/components/LeagueTable";
 
 const matches = [
   {
@@ -57,6 +59,7 @@ const getStatusColor = (status: string) => {
 
 export default function Matches() {
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [showLeagueTable, setShowLeagueTable] = useState(false);
 
   const filteredMatches = matches.filter(match => {
     if (selectedFilter === "all") return true;
@@ -81,8 +84,8 @@ export default function Matches() {
 
       {/* Content */}
       <main className="flex-1 p-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+  {/* Stats Overview + League Table Card */}
+  <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -138,7 +141,23 @@ export default function Matches() {
               </div>
             </CardContent>
           </Card>
+
+          {/* League Table Card */}
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowLeagueTable((v) => !v)}>
+            <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+              <Trophy size={32} className="mb-2 text-primary" />
+              <p className="text-sm font-medium text-muted-foreground">League Table</p>
+              <Button variant="outline" className="mt-2">{showLeagueTable ? "Hide" : "View"} League Table</Button>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* League Table Display */}
+        {showLeagueTable && (
+          <div className="mb-8">
+            <LeagueTable />
+          </div>
+        )}
 
         {/* Filter Tabs */}
         <div className="flex gap-2 mb-6">

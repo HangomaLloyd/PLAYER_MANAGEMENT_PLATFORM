@@ -1,13 +1,22 @@
-import { Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("jwt");
+  const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+  const location = useLocation();
 
-  if (!token) {
-    // Redirect to the login page if no token is found
-    return <Navigate to="/auth" replace />;
-  }
+  useEffect(() => {
+    fetch("/api/auth/check", { credentials: "include" })
+      .then(res => {
+        if (res.ok) setAuthenticated(true);
+        else setAuthenticated(false);
+      })
+      .catch(() => setAuthenticated(false))
+      .finally(() => setLoading(false));
+  }, [location.pathname]);
 
-  // Render the children if a token exists
+  if (loading) return <div>Loading...</div>;
+  if (!authenticated) return <Navigate to="/auth" replace state={{ from: location }} />;
   return children;
 }
